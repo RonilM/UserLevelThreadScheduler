@@ -25,6 +25,7 @@ static ucontext_t main_context;
 static int id = 0;
 
 void changeContext(int signum);
+void scheduler();
 
 void thread_start(void (*t_func)(void)){
     t_func();
@@ -56,14 +57,11 @@ void my_pthread_yield(){
 
         }
         
-        currentThread = (currentThread+1)%MAX_THREAD_COUNT;
-        
         if(nextQueueIndex <= 0){
             return;
         }
-        if(currentThread >= nextQueueIndex){
-            currentThread = 0;
-        }
+        
+        scheduler();
         
         inMainThread = 0;
         signal(SIGALRM, changeContext);
@@ -72,10 +70,17 @@ void my_pthread_yield(){
         inMainThread = 1;
     
     }
+}
 
 
-
-
+void scheduler(){
+    
+    currentThread = (currentThread+1)%MAX_THREAD_COUNT;
+    
+    if(currentThread >= nextQueueIndex){
+        currentThread = 0;
+    }
+    
 }
 
 void changeContext(int signum){
