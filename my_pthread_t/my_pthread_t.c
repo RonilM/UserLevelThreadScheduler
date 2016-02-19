@@ -24,9 +24,7 @@ static int id = 0;
 
 void thread_start(void (*t_func)(void)){
     
-    //thread_queue[currentThread].isActive = 1;
     t_func();
-    //thread_queue[currentThread].isActive = 0;
     thread_queue[currentThread].isFinished = 1;
     
     my_pthread_yield();
