@@ -47,27 +47,7 @@ void my_pthread_yield(){
     }
     else{
         
-        //printf("Entered main flow!\n");
-        
-        if(currentThread >=0 && thread_queue[currentThread].isFinished == 1){
-            printf("Deleting thread with id %d\n",thread_queue[currentThread].id);
-            nextQueueIndex--;
-            free( thread_queue[currentThread].stack );
-            thread_queue[currentThread] = thread_queue[nextQueueIndex];
-
-        }
-        
-        if(nextQueueIndex <= 0){
-            return;
-        }
-        
         scheduler();
-        
-        inMainThread = 0;
-        signal(SIGALRM, changeContext);
-        alarm(2);
-        swapcontext(&main_context, &thread_queue[currentThread].context);
-        inMainThread = 1;
     
     }
 }
@@ -75,11 +55,31 @@ void my_pthread_yield(){
 
 void scheduler(){
     
+    //printf("Entered main flow!\n");
+    
+    if(currentThread >=0 && thread_queue[currentThread].isFinished == 1){
+        printf("Deleting thread with id %d\n",thread_queue[currentThread].id);
+        nextQueueIndex--;
+        free( thread_queue[currentThread].stack );
+        thread_queue[currentThread] = thread_queue[nextQueueIndex];
+        
+    }
+    
+    if(nextQueueIndex <= 0){
+        return;
+    }
+    
     currentThread = (currentThread+1)%MAX_THREAD_COUNT;
     
     if(currentThread >= nextQueueIndex){
         currentThread = 0;
     }
+    
+    inMainThread = 0;
+    signal(SIGALRM, changeContext);
+    alarm(2);
+    swapcontext(&main_context, &thread_queue[currentThread].context);
+    inMainThread = 1;
     
 }
 

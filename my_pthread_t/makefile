@@ -1,0 +1,4 @@
+
+run: main.c my_pthread_t.c my_pthread_t.h
+	gcc main.c my_pthread_t.c
+	./a.out
