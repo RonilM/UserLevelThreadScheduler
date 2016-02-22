@@ -19,14 +19,14 @@
 int addElementToQueue(my_pthread_t *thread,struct Queue *queue){
     
     if(queue->head == 0){
-        printf("h1\n");
+        //printf("h1\n");
         queue->head = malloc(sizeof(struct Node));
         queue->head->thread = thread;
         queue->tail = queue->head;
         return 1;
     }
     else{
-        printf("h2\n");
+        //printf("h2\n");
         queue->tail->next = malloc(sizeof(struct Node));
         queue->tail = queue->tail->next;
         
@@ -45,7 +45,7 @@ int removeElementFromQueue(struct Queue *queue,my_pthread_t **thread){
     
     if(queue->head == queue->tail){
         //deepCopyThreads(thread,queue->head->thread);
-        printf("h3\n");
+        //printf("h3\n");
         *thread = queue->head->thread;
         free(queue->head);
         queue->head = 0;
@@ -53,13 +53,13 @@ int removeElementFromQueue(struct Queue *queue,my_pthread_t **thread){
         //return thread;
     }
     else{
-        printf("h4\n");
+        //printf("h4\n");
         *thread = queue->head->thread;
         struct Node *temp = queue->head;
         queue->head = queue->head->next;
-        printf("btemp:%x\n",*thread);
+        //printf("btemp:%x\n",*thread);
         free(temp);
-        printf("atemp:%x\n",*thread);
+        //printf("atemp:%x\n",*thread);
     }
     
     return 1;
