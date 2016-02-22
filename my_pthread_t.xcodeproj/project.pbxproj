@@ -10,6 +10,7 @@
 		620502BE1C73D50D00A6AB19 /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = 620502BD1C73D50D00A6AB19 /* main.c */; };
 		620502C61C76302300A6AB19 /* my_pthread_t.c in Sources */ = {isa = PBXBuildFile; fileRef = 620502C51C76302300A6AB19 /* my_pthread_t.c */; };
 		620502C81C78AF6300A6AB19 /* makefile in Sources */ = {isa = PBXBuildFile; fileRef = 620502C71C78AF6300A6AB19 /* makefile */; };
+		620502CB1C7BC21600A6AB19 /* my_queue.c in Sources */ = {isa = PBXBuildFile; fileRef = 620502CA1C7BC21600A6AB19 /* my_queue.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -30,6 +31,8 @@
 		620502C41C73D5DC00A6AB19 /* my_pthread_t.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = my_pthread_t.h; sourceTree = "<group>"; };
 		620502C51C76302300A6AB19 /* my_pthread_t.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = my_pthread_t.c; sourceTree = "<group>"; };
 		620502C71C78AF6300A6AB19 /* makefile */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.make; path = makefile; sourceTree = "<group>"; };
+		620502C91C7BC1B400A6AB19 /* my_queue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = my_queue.h; sourceTree = "<group>"; };
+		620502CA1C7BC21600A6AB19 /* my_queue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = my_queue.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -66,6 +69,8 @@
 				620502C41C73D5DC00A6AB19 /* my_pthread_t.h */,
 				620502C51C76302300A6AB19 /* my_pthread_t.c */,
 				620502C71C78AF6300A6AB19 /* makefile */,
+				620502C91C7BC1B400A6AB19 /* my_queue.h */,
+				620502CA1C7BC21600A6AB19 /* my_queue.c */,
 			);
 			path = my_pthread_t;
 			sourceTree = "<group>";
@@ -127,6 +132,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				620502BE1C73D50D00A6AB19 /* main.c in Sources */,
+				620502CB1C7BC21600A6AB19 /* my_queue.c in Sources */,
 				620502C61C76302300A6AB19 /* my_pthread_t.c in Sources */,
 				620502C81C78AF6300A6AB19 /* makefile in Sources */,
 			);

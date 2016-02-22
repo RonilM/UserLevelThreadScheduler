@@ -16,6 +16,15 @@
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include "my_queue.h"
+
+
+
+struct Queue *queue1;
+
+
+
+
 
 my_pthread_t thread_queue[MAX_THREAD_COUNT];
 static int nextQueueIndex = 0;
@@ -125,6 +134,7 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
 
 void init_threads()
 {
+    
     int i;
     for ( i = 0; i < MAX_THREAD_COUNT; ++ i )
     {
@@ -154,4 +164,16 @@ int my_pthread_join(my_pthread_t * thread, void **value_ptr){
     
     }
 }
+
+void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2){
+
+    t1->id = t2->id;
+    t1->context = t2->context;
+    t1->isFinished = t2->isFinished;
+    t1->stack = t2->stack;
+    
+}
+
+
+
 

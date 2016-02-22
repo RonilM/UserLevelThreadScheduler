@@ -45,5 +45,7 @@ extern void thread_start(void (*t_func)(void));
 
 extern void init_threads();
 
+extern void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2);
+
 
 #endif
