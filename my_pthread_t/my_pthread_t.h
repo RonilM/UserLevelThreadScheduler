@@ -24,6 +24,7 @@ typedef struct {
     void* stack;
     ucontext_t context;
     int isFinished;
+    int isCleaned;
 
 } my_pthread_t;
 

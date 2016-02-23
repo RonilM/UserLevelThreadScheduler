@@ -26,19 +26,19 @@ struct Queue *queue1;
 
 
 
-my_pthread_t thread_queue[MAX_THREAD_COUNT];
+//my_pthread_t thread_queue[MAX_THREAD_COUNT];
 static int nextQueueIndex = 0;
-static int currentThread = -1;
+static my_pthread_t *currentThread = 0;
 static int inMainThread = 1;
 static ucontext_t main_context;
-static int id = 0;
+static int id = 1;
 
 void changeContext(int signum);
 void scheduler();
 
 void thread_start(void (*t_func)(void)){
     t_func();
-    thread_queue[currentThread].isFinished = 1;
+    currentThread->isFinished = 1;
     my_pthread_yield();
 }
 
@@ -50,12 +50,12 @@ void my_pthread_yield(){
         //printf("Entered thread flow\n");
         
         inMainThread = 1;
-        swapcontext(&thread_queue[currentThread].context, &main_context );
+        swapcontext(&currentThread->context, &main_context );
         inMainThread = 0;
         return;
     }
     else{
-        
+        //printf("scheduler()\n");
         scheduler();
     
     }
@@ -64,37 +64,43 @@ void my_pthread_yield(){
 
 void scheduler(){
     
-    //printf("Entered main flow!\n");
+    //printf("Entered scheduler flow!\n");
     
-    if(currentThread >=0 && thread_queue[currentThread].isFinished == 1){
-        printf("Deleting thread with id %d\n",thread_queue[currentThread].id);
-        nextQueueIndex--;
-        free( thread_queue[currentThread].stack );
-        thread_queue[currentThread] = thread_queue[nextQueueIndex];
-        
+    //currentThread = queue1->head->thread;
+    
+    if(currentThread!= 0 && currentThread->isFinished == 1){
+        printf("Deleting thread with id %d\n",currentThread->id);
+        my_pthread_t *temp;
+        removeElementFromQueue(queue1,&temp);
+        free(temp->stack);
+        temp->isCleaned = 1;
+        //free(temp);
     }
+    else{
+        //printf("in sc else\n");
+        my_pthread_t *temp;
+        removeElementFromQueue(queue1,&temp);
+        addElementToQueue(temp, queue1);
     
-    if(nextQueueIndex <= 0){
+    }
+    if(queue1->head == 0){
+        printf("Queue is empty\n");
+        currentThread = 0;
         return;
     }
-    
-    currentThread = (currentThread+1)%MAX_THREAD_COUNT;
-    
-    if(currentThread >= nextQueueIndex){
-        currentThread = 0;
-    }
-    
+    currentThread = queue1->head->thread;
     inMainThread = 0;
     signal(SIGALRM, changeContext);
     alarm(2);
-    swapcontext(&main_context, &thread_queue[currentThread].context);
+    //printf("about to swap Cs\n");
+    swapcontext(&main_context,&currentThread->context);
     inMainThread = 1;
     
 }
 
 void changeContext(int signum){
     
-    swapcontext(&thread_queue[currentThread].context,&main_context);
+    swapcontext(&currentThread->context,&main_context);
 
 }
 
@@ -103,30 +109,28 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
     
     if(nextQueueIndex == MAX_THREAD_COUNT) return THREAD_POOL_SATURATED_RETURN_VALUE;
     
-    //printf("about to getContext\n");
-    thread_queue[nextQueueIndex].isFinished = 0;
-    getcontext(&thread_queue[nextQueueIndex].context);
-    //printf("GOTContext\n");
-    thread_queue[nextQueueIndex].context.uc_link = 0;
-    thread_queue[nextQueueIndex].stack = malloc( THREAD_STACK );
-    //printf("Did malloc \n");
-    thread_queue[nextQueueIndex].context.uc_stack.ss_sp = thread_queue[nextQueueIndex].stack;
-    thread_queue[nextQueueIndex].context.uc_stack.ss_size = THREAD_STACK;
-    thread_queue[nextQueueIndex].context.uc_stack.ss_flags = 0;
+    //thread = malloc(sizeof(my_pthread_t));
+    thread->isFinished = 0;
+    thread->isCleaned = 0;
+    getcontext(&(thread->context));
+    thread->context.uc_link = 0;
+    thread->stack = malloc( THREAD_STACK );
+    thread->context.uc_stack.ss_sp = thread->stack;
+    thread->context.uc_stack.ss_size = THREAD_STACK;
+    thread->context.uc_stack.ss_flags = 0;
     
-    if ( thread_queue[nextQueueIndex].stack == 0 )
+    if ( thread->stack == 0 )
     {
         printf( "Error: Could not allocate stack.\n" );
         return MALLOC_ERROR;
     }
     //printf("about to add address to queue\n");
-    thread_queue[nextQueueIndex].id = id;
     thread->id = id;
     id++;
-    
+    addElementToQueue(thread, queue1);
     //printf("about to makeContext\n");
-    makecontext( &thread_queue[ nextQueueIndex ].context, (void (*)(void)) &thread_start, 1, function );
-    nextQueueIndex++;
+    makecontext( &thread->context, (void (*)(void)) &thread_start, 1, function );
+    //nextQueueIndex++;
     return 0;
 }
 
@@ -134,33 +138,28 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
 
 void init_threads()
 {
-    
-    int i;
+    queue1 = malloc(sizeof(struct Queue));
+    /*int i;
     for ( i = 0; i < MAX_THREAD_COUNT; ++ i )
     {
         thread_queue[i].isFinished = 0;
         thread_queue[i].id = -999;
-    }
+    }*/
     
     return;
 }
 
 int my_pthread_join(my_pthread_t * thread, void **value_ptr){
-    int isFinished = 0;
     while (1) {
-        isFinished = 1;
-        int i;
-        for(i = 0; i < nextQueueIndex; i++){
-            if(thread_queue[i].id == thread->id){
-                isFinished = 0;
-                break;
-            }
-        }
-        
-        if(isFinished)
+        //printf("checking thread in join:: %d\n",thread->isFinished);
+        if(thread->isCleaned == 1){
+            printf("Ending threadid %d\n",thread->id);
             return 0;
-       else
-           my_pthread_yield();
+        }
+        else{
+            //printf("Yeilding for thread %x\n",thread);
+            my_pthread_yield();
+        }
     
     }
 }

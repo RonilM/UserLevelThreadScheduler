@@ -41,8 +41,9 @@ int main(int argc, const char * argv[]) {
     my_pthread_create(&thread1, NULL, &threadfunc1,NULL);
     my_pthread_create(&thread2, NULL, &threadfunc2,NULL);
     
-    my_pthread_join(&thread1,NULL);
+    
     my_pthread_join(&thread2,NULL);
+    my_pthread_join(&thread1,NULL);
     
     printf("Ending main!\n");
     
