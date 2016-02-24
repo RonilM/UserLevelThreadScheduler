@@ -20,13 +20,10 @@
 
 
 
-struct Queue *queue1;
+//struct Queue *queue1;
 
-
-
-
-
-//my_pthread_t thread_queue[MAX_THREAD_COUNT];
+struct Queue queue[MAX_QUEUE_COUNT];
+static int currentQueue = 0;
 static int nextQueueIndex = 0;
 static my_pthread_t *currentThread = 0;
 static int inMainThread = 1;
@@ -35,6 +32,22 @@ static int id = 1;
 
 void changeContext(int signum);
 void scheduler();
+
+
+
+
+void init_threads()
+{
+    //queue1 = malloc(sizeof(struct Queue));
+    /*int i;
+     for ( i = 0; i < MAX_QUEUE_COUNT; ++ i )
+     {
+        
+     }
+    
+    return;*/
+}
+
 
 void thread_start(void (*t_func)(void)){
     t_func();
@@ -69,30 +82,30 @@ void scheduler(){
     //currentThread = queue1->head->thread;
     
     if(currentThread!= 0 && currentThread->isFinished == 1){
-        printf("Deleting thread with id %d\n",currentThread->id);
+        
+        printf("Cleaning thread with id %d\n",currentThread->id);
+        
         my_pthread_t *temp;
-        removeElementFromQueue(queue1,&temp);
+        removeElementFromQueue(&queue[currentQueue],&temp);
         free(temp->stack);
         temp->isCleaned = 1;
-        //free(temp);
     }
     else{
         //printf("in sc else\n");
         my_pthread_t *temp;
-        removeElementFromQueue(queue1,&temp);
-        addElementToQueue(temp, queue1);
+        removeElementFromQueue(&queue[currentQueue],&temp);
+        addElementToQueue(temp, &queue[currentQueue]);
     
     }
-    if(queue1->head == 0){
+    if(queue[0].head == 0){
         printf("Queue is empty\n");
         currentThread = 0;
         return;
     }
-    currentThread = queue1->head->thread;
+    currentThread = queue[currentQueue].head->thread;
     inMainThread = 0;
     signal(SIGALRM, changeContext);
-    alarm(2);
-    //printf("about to swap Cs\n");
+    alarm(FIRST_QUEUE_QUANTA);
     swapcontext(&main_context,&currentThread->context);
     inMainThread = 1;
     
@@ -127,7 +140,7 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
     //printf("about to add address to queue\n");
     thread->id = id;
     id++;
-    addElementToQueue(thread, queue1);
+    addElementToQueue(thread, &queue[0]);
     //printf("about to makeContext\n");
     makecontext( &thread->context, (void (*)(void)) &thread_start, 1, function );
     //nextQueueIndex++;
@@ -136,18 +149,6 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
 
 
 
-void init_threads()
-{
-    queue1 = malloc(sizeof(struct Queue));
-    /*int i;
-    for ( i = 0; i < MAX_THREAD_COUNT; ++ i )
-    {
-        thread_queue[i].isFinished = 0;
-        thread_queue[i].id = -999;
-    }*/
-    
-    return;
-}
 
 int my_pthread_join(my_pthread_t * thread, void **value_ptr){
     while (1) {

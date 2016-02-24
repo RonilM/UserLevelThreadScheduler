@@ -55,7 +55,8 @@ int removeElementFromQueue(struct Queue *queue,my_pthread_t **thread){
     else{
         //printf("h4\n");
         *thread = queue->head->thread;
-        struct Node *temp = queue->head;
+        struct Node *temp;
+        temp = queue->head;
         queue->head = queue->head->next;
         //printf("btemp:%x\n",*thread);
         free(temp);
