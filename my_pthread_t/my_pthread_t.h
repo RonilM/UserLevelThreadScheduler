@@ -30,7 +30,11 @@ typedef struct {
 
 } my_pthread_t;
 
+// Mutex structure.. Count must be uninterruptable
 
+typedef struct {
+    atomic_t count;
+} my_pthread_mutex_t;
 
 //Creates a pthread that executes function. Attributes are ignored.
 extern int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void), void * arg);
