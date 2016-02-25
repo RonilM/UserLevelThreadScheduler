@@ -79,7 +79,6 @@ void scheduler(){
     
     //printf("Entered scheduler flow!\n");
     
-    //currentThread = queue1->head->thread;
     
     if(currentThread!= 0 && currentThread->isFinished == 1){
         
@@ -91,7 +90,6 @@ void scheduler(){
         temp->isCleaned = 1;
     }
     else{
-        //printf("in sc else\n");
         my_pthread_t *temp;
         removeElementFromQueue(&queue[currentQueue],&temp);
         addElementToQueue(temp, &queue[currentQueue]);
@@ -122,7 +120,6 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
     
     if(nextQueueIndex == MAX_THREAD_COUNT) return THREAD_POOL_SATURATED_RETURN_VALUE;
     
-    //thread = malloc(sizeof(my_pthread_t));
     thread->isFinished = 0;
     thread->isCleaned = 0;
     getcontext(&(thread->context));
@@ -137,13 +134,10 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
         printf( "Error: Could not allocate stack.\n" );
         return MALLOC_ERROR;
     }
-    //printf("about to add address to queue\n");
     thread->id = id;
     id++;
     addElementToQueue(thread, &queue[0]);
-    //printf("about to makeContext\n");
     makecontext( &thread->context, (void (*)(void)) &thread_start, 1, function );
-    //nextQueueIndex++;
     return 0;
 }
 
@@ -152,13 +146,11 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
 
 int my_pthread_join(my_pthread_t * thread, void **value_ptr){
     while (1) {
-        //printf("checking thread in join:: %d\n",thread->isFinished);
         if(thread->isCleaned == 1){
             printf("Ending threadid %d\n",thread->id);
             return 0;
         }
         else{
-            //printf("Yeilding for thread %x\n",thread);
             my_pthread_yield();
         }
     

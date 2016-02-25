@@ -30,7 +30,7 @@ int removeElementFromQueue(struct Queue *queue,my_pthread_t **thread);
 
 /* 
  
- //Tutorial on how to use the my_queue.h library
+ //Tutorial by Ronil Mehta on how to use the my_queue.h library
 
  queue1 = malloc(sizeof(struct Queue));
  my_pthread_t *testT = malloc(sizeof(my_pthread_t));
