@@ -10,12 +10,20 @@
 #define _XOPEN_SOURCE
 #endif
 
+#ifdef __MACH__
+#include <mach/clock.h>
+#include <mach/mach.h>
+#endif
+
 #include <stdio.h>
+#include <inttypes.h>
 #include "my_pthread_t.h"
 #include <ucontext.h>
 #include <stdlib.h>
 #include <signal.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/time.h>
 #include "my_queue.h"
 
 
@@ -33,8 +41,8 @@ static int cycle_counter = 1;
 
 void changeContext(int signum);
 void scheduler();
-
-
+long getCurrentTimestamp();
+void setAlarm(int seconds,suseconds_t microseconds);
 
 
 void init_threads()
@@ -57,13 +65,17 @@ void thread_start(void (*t_func)(void)){
 }
 
 void my_pthread_yield(){
-    
-    alarm(0);
-    
+    long currentTimestamp = getCurrentTimestamp();
+    setAlarm(0,0);
+    //alarm(0);
     if (inMainThread == 0) {
+
+        currentThread->timeSpent = currentThread->timeSpent + currentTimestamp - currentThread->startTimestamp;
+        
         inMainThread = 1;
         swapcontext(&currentThread->context, &main_context );
         inMainThread = 0;
+        
         return;
     }
     else{
@@ -96,7 +108,16 @@ void scheduler(){
         //printf("Round robin Sched!\n");
         my_pthread_t *temp;
         removeElementFromQueue(&queue[currentQueue],&temp);
+        
         int nextQueue = (currentQueue + 1)%MAX_QUEUE_COUNT;
+        if (temp->timeSpent < FIRST_QUEUE_QUANTA) {
+            //printf("Shifting to thread%d to same queue\n",temp->id);
+            nextQueue = currentQueue;
+        }
+        else{
+            currentThread->timeSpent = 0;
+        }
+        
         if(nextQueue == 0){
             addElementToQueue(temp, &queue[currentQueue]);
         }
@@ -119,16 +140,26 @@ void scheduler(){
         //return;
     }
     currentThread = queue[currentQueue].head->thread;
+    
+
+    long quantumAllocation = FIRST_QUEUE_QUANTA - currentThread->timeSpent;
+    if (quantumAllocation <= 0) {
+        printf("QA is 1000\n");
+        quantumAllocation = 1000;
+    }
+    //printf("Q.A. for thread%d is %ld\n bcause timeSpnt is %ld\n",currentThread->id,quantumAllocation,currentThread->timeSpent);
     inMainThread = 0;
     signal(SIGALRM, changeContext);
-    alarm(FIRST_QUEUE_QUANTA);
+    currentThread->startTimestamp = getCurrentTimestamp();
+    //alarm(quantumAllocation);
+    setAlarm((int)(quantumAllocation/1000),quantumAllocation%1000);
     swapcontext(&main_context,&currentThread->context);
     inMainThread = 1;
     
 }
 
 void changeContext(int signum){
-    
+    currentThread->timeSpent = FIRST_QUEUE_QUANTA;
     swapcontext(&currentThread->context,&main_context);
 
 }
@@ -141,6 +172,8 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
 
     thread->isFinished = 0;
     thread->isCleaned = 0;
+    thread->startTimestamp = 0;
+    thread->timeSpent = 0;
     getcontext(&(thread->context));
     thread->context.uc_link = 0;
     thread->stack = malloc( THREAD_STACK );
@@ -200,5 +233,42 @@ void scanSchedulerQueues(){
 
 }
 
+long getCurrentTimestamp(){
+
+    struct timespec spec;
+#ifdef __MACH__ // OS X does not have clock_gettime, using clock_get_time
+    clock_serv_t cclock;
+    mach_timespec_t mts;
+    host_get_clock_service(mach_host_self(), CALENDAR_CLOCK, &cclock);
+    clock_get_time(cclock, &mts);
+    mach_port_deallocate(mach_task_self(), cclock);
+    spec.tv_sec = mts.tv_sec;
+    spec.tv_nsec = mts.tv_nsec;
+#else
+    clock_gettime(CLOCK_REALTIME, &spec);
+#endif
+    
+    return spec.tv_nsec;
+
+
+}
+
+void setAlarm(int seconds,suseconds_t microseconds){
+    
+    
+    struct itimerval tout_val;
+    
+    //if(seconds == 0 && microseconds == 0){
+        //tout_val.it_value = 0;
+    //}else{
+        tout_val.it_interval.tv_sec = 0;
+        tout_val.it_interval.tv_usec = 0;
+        tout_val.it_value.tv_sec = seconds; /* set timer for "INTERVAL (10) seconds */
+        tout_val.it_value.tv_usec = microseconds;
+    //}
+    setitimer(ITIMER_REAL, &tout_val,0);
+    
+    
+}
 
 

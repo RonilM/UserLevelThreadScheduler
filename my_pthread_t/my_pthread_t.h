@@ -12,7 +12,7 @@
 
 #define MAX_THREAD_COUNT 10
 #define MAX_QUEUE_COUNT 3
-#define FIRST_QUEUE_QUANTA 2
+#define FIRST_QUEUE_QUANTA 2000 //milliseconds
 #define THREAD_STACK (1024*1024)
 #define THREAD_POOL_SATURATED_RETURN_VALUE 1
 #define MALLOC_ERROR 2
@@ -21,13 +21,14 @@
 #include <ucontext.h>
 
 typedef struct {
-
     int id;
     void* stack;
     ucontext_t context;
     int isFinished;
     int isCleaned;
-
+    long startTimestamp;
+    long timeSpent;
+    long allocatedQuantum;
 } my_pthread_t;
 
 // Mutex structure.. Count must be uninterruptable
