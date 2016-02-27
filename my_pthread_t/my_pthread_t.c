@@ -29,6 +29,7 @@ static my_pthread_t *currentThread = 0;
 static int inMainThread = 1;
 static ucontext_t main_context;
 static int id = 1;
+static int cycle_counter = 1;
 
 void changeContext(int signum);
 void scheduler();
@@ -56,28 +57,30 @@ void thread_start(void (*t_func)(void)){
 }
 
 void my_pthread_yield(){
-
-    //If not in main thread
+    
+    alarm(0);
+    
     if (inMainThread == 0) {
-        
-        //printf("Entered thread flow\n");
-        
         inMainThread = 1;
         swapcontext(&currentThread->context, &main_context );
         inMainThread = 0;
         return;
     }
     else{
-        //printf("scheduler()\n");
+        
+        cycle_counter++;
+        cycle_counter = (cycle_counter%SCAN_INTERVAL_COUNT);
+        if(cycle_counter == 0){
+            scanSchedulerQueues();
+        }
+        
         scheduler();
-    
+        
     }
 }
 
 
 void scheduler(){
-    
-    //printf("Entered scheduler flow!\n");
     
     
     if(currentThread!= 0 && currentThread->isFinished == 1){
@@ -90,15 +93,30 @@ void scheduler(){
         temp->isCleaned = 1;
     }
     else{
+        //printf("Round robin Sched!\n");
         my_pthread_t *temp;
         removeElementFromQueue(&queue[currentQueue],&temp);
-        addElementToQueue(temp, &queue[currentQueue]);
-    
+        int nextQueue = (currentQueue + 1)%MAX_QUEUE_COUNT;
+        if(nextQueue == 0){
+            addElementToQueue(temp, &queue[currentQueue]);
+        }
+        else{
+            addElementToQueue(temp, &queue[nextQueue]);
+        }
+                                                                          
     }
-    if(queue[0].head == 0){
-        printf("Queue is empty\n");
-        currentThread = 0;
-        return;
+    if(queue[currentQueue].head == 0){
+        int tempCurrentQueue = currentQueue;
+        currentQueue = (currentQueue+1)%MAX_QUEUE_COUNT;
+        while(queue[currentQueue].head == 0 && currentQueue != tempCurrentQueue){
+            currentQueue = (currentQueue+1)%MAX_QUEUE_COUNT;
+        }
+        if(currentQueue == tempCurrentQueue){
+            printf("Queues are empty\n");
+            return;
+        }
+        //currentThread = 0;
+        //return;
     }
     currentThread = queue[currentQueue].head->thread;
     inMainThread = 0;
@@ -117,9 +135,10 @@ void changeContext(int signum){
 
 int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void), void * arg){
     //printf("start creation!\n");
-    
-    if(nextQueueIndex == MAX_THREAD_COUNT) return THREAD_POOL_SATURATED_RETURN_VALUE;
-    
+    //if(nextQueueIndex == MAX_THREAD_COUNT) return THREAD_POOL_SATURATED_RETURN_VALUE;
+
+    currentQueue = 0;
+
     thread->isFinished = 0;
     thread->isCleaned = 0;
     getcontext(&(thread->context));
@@ -136,7 +155,7 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
     }
     thread->id = id;
     id++;
-    addElementToQueue(thread, &queue[0]);
+    addElementToQueue(thread, &queue[currentQueue]);
     makecontext( &thread->context, (void (*)(void)) &thread_start, 1, function );
     return 0;
 }
@@ -166,6 +185,20 @@ void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2){
     
 }
 
+void scanSchedulerQueues(){
+    printf("Move all jobs to Topmost queue\n");
+    currentQueue = 0;
+    struct Queue *primary = &queue[0];
+    int i;
+    for(i = 1; i < MAX_QUEUE_COUNT ; i++){
+        while(queue[i].head != 0){
+            my_pthread_t *temp;
+            removeElementFromQueue(&queue[i], &temp);
+            addElementToQueue(temp, &queue[0]);
+        }
+    }
+
+}
 
 
 

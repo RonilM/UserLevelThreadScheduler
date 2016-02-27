@@ -11,12 +11,12 @@
 #define my_pthread_t_my_pthread_t_h
 
 #define MAX_THREAD_COUNT 10
-#define MAX_QUEUE_COUNT 4
+#define MAX_QUEUE_COUNT 3
 #define FIRST_QUEUE_QUANTA 2
 #define THREAD_STACK (1024*1024)
-#define THREAD_POOL_SATURATED_RETURN_VALUE 1;
-#define MALLOC_ERROR 2;
-
+#define THREAD_POOL_SATURATED_RETURN_VALUE 1
+#define MALLOC_ERROR 2
+#define SCAN_INTERVAL_COUNT 6
 
 #include <ucontext.h>
 
@@ -54,5 +54,6 @@ extern void init_threads();
 
 extern void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2);
 
+extern void scanSchedulerQueues();
 
 #endif
