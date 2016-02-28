@@ -4,6 +4,7 @@
 //
 //  Created by Ronil Mehta on 16/02/16.
 //  Copyright (c) 2016 Ronil Mehta. All rights reserved.
+//  Authors: Ronil Mehta (rvm41), Saurabh Deochake (srd117)
 //
 
 #ifndef my_pthread_t_my_pthread_t_h
@@ -31,11 +32,15 @@ typedef struct {
     long allocatedQuantum;
 } my_pthread_t;
 
-// Mutex structure.. Count must be uninterruptable
-/*
+/* A light-weight mutex structure
+ * This is a test&set mutex which uses a variable
+ * which is modified based on locking-unlocking
+ * mechanism.
+ * */
+
 typedef struct {
-    atomic_t count;
-} my_pthread_mutex_t; */
+    int isLocked;
+} my_pthread_mutex_t;
 
 //Creates a pthread that executes function. Attributes are ignored.
 extern int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void), void * arg);
@@ -48,6 +53,18 @@ extern void my_pthread_exit(void *value_ptr);
 
 //Call to the my_pthread_t library ensuring that the calling thread will not  execute until the one it references exits. If value_ptr is not null, the return value of the  exiting thread will be passed back.
 int my_pthread_join(my_pthread_t * thread, void **value_ptr);
+
+// Call to my_pthread_t library to initialize the mutex variable
+extern int my_pthread_mutex_init(my_pthread_mutex_t *mutex);
+
+//Call to my_pthread_t library to lock the mutex variable
+extern int my_pthread_mutex_lock(my_pthread_mutex_t *mutex);
+
+//Call to my_pthread_t library to unlock the mutex variable
+extern int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex);
+
+////Call to my_pthread_t library to free up the mutex variable
+extern int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex);
 
 extern void thread_start(void (*t_func)(void));
 

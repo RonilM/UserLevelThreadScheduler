@@ -4,7 +4,7 @@
 //
 //  Created by Ronil Mehta on 18/02/16.
 //  Copyright (c) 2016 Ronil Mehta. All rights reserved.
-//
+//  Authors: Ronil Mehta (rvm41), Saurabh Deochake (srd117)
 
 #ifdef __APPLE__
 #define _XOPEN_SOURCE
@@ -271,4 +271,76 @@ void setAlarm(int seconds,suseconds_t microseconds){
     
 }
 
+/* Name: my_pthread_mutex_init
+ * Input:    mutex structure pointer
+ * Output:   return on success
+ * Function: Initialize the "mutex" structure and allocate
+ *           the memory. Set the lock variable to 0.
+ **/
+int my_pthread_mutex_init(my_pthread_mutex_t *mutex){
+    
+    mutex = (my_pthread_mutex_t *) malloc(sizeof(my_pthread_mutex_t));
+    mutex -> isLocked = 0;
+    return(EXIT_SUCCESS);
+}
 
+/* Name: my_pthread_mutex_lock
+ * Input:    mutex structure pointer
+ * Output:   return on success
+ * Function: If mutex is not locked, set the
+ *           lock variable to 0. If not, call
+ *           yeild function until mutex is available.
+ **/
+int my_pthread_mutex_lock(my_pthread_mutex_t *mutex){
+    if (mutex == NULL){
+        my_pthread_mutex_init(mutex);
+    }
+    
+    //check if the mutex is already locked
+    while(1){
+        if (mutex -> isLocked){
+        my_pthread_yield();
+        }
+    //when it is not, set lock variable to 1
+        else{
+            mutex -> isLocked = 1;
+            return(EXIT_SUCCESS);
+        }
+    }
+}
+
+/* Name:     my_pthread_mutex_unlock
+ * Input:    mutex structure pointer
+ * Output:   return on success
+ * Function: If mutex is locked, set the lock
+ *           value to 0. Return on success.  
+ **/
+
+int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex){  
+    if (mutex == NULL){
+        my_pthread_mutex_init(mutex);
+    }
+    
+    // If mutex is locked, set the lock variable to 0.
+    if (mutex-> isLocked){
+        mutex-> isLocked = 0;    
+    }
+    return(EXIT_SUCCESS);
+}
+
+/* Name:     my_pthread_mutex_destroy
+ * Input:    mutex structure pointer
+ * Output:   return on success
+ * Function: Free up the mutex variable. 
+ *           **WARNING**
+ *           Before you destroy the mutex varible,
+ *           make sure you unlock it.
+ **/
+
+int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex){
+    // Unlock the mutex variable before freeing up.
+    my_pthread_mutex_unlock(mutex);
+    mutex = NULL;
+    
+    return(EXIT_SUCCESS);
+}
