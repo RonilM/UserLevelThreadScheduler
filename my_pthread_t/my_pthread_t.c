@@ -32,12 +32,12 @@
 
 struct Queue queue[MAX_QUEUE_COUNT];
 static int currentQueue = 0;
-static int nextQueueIndex = 0;
 static my_pthread_t *currentThread = 0;
 static int inMainThread = 1;
 static ucontext_t main_context;
 static int id = 1;
 static int cycle_counter = 1;
+static int firstFlag = 0;
 
 void changeContext(int signum);
 void scheduler();
@@ -97,32 +97,36 @@ void scheduler(){
     
     if(currentThread!= 0 && currentThread->isFinished == 1){
         
-        printf("Cleaning thread with id %d\n",currentThread->id);
-        
+        //printf("Cleaning thread with id %d\n",currentThread->id);
         my_pthread_t *temp;
         removeElementFromQueue(&queue[currentQueue],&temp);
         free(temp->stack);
         temp->isCleaned = 1;
     }
     else{
-        //printf("Round robin Sched!\n");
-        my_pthread_t *temp;
-        removeElementFromQueue(&queue[currentQueue],&temp);
+        if(firstFlag == 1){
+            //printf("Round robin Sched!\n");
+            my_pthread_t *temp;
+            removeElementFromQueue(&queue[currentQueue],&temp);
         
-        int nextQueue = (currentQueue + 1)%MAX_QUEUE_COUNT;
-        if (temp->timeSpent < FIRST_QUEUE_QUANTA) {
-            //printf("Shifting to thread%d to same queue\n",temp->id);
-            nextQueue = currentQueue;
+            int nextQueue = (currentQueue + 1)%MAX_QUEUE_COUNT;
+            if (temp->timeSpent < FIRST_QUEUE_QUANTA) {
+                //printf("Shifting to thread%d to same queue\n",temp->id);
+                nextQueue = currentQueue;
+            }
+            else{
+                currentThread->timeSpent = 0;
+            }
+        
+            if(nextQueue == 0){
+                addElementToQueue(temp, &queue[currentQueue]);
+            }
+            else{
+                addElementToQueue(temp, &queue[nextQueue]);
+            }
         }
         else{
-            currentThread->timeSpent = 0;
-        }
-        
-        if(nextQueue == 0){
-            addElementToQueue(temp, &queue[currentQueue]);
-        }
-        else{
-            addElementToQueue(temp, &queue[nextQueue]);
+            firstFlag = 1;
         }
                                                                           
     }
@@ -133,7 +137,7 @@ void scheduler(){
             currentQueue = (currentQueue+1)%MAX_QUEUE_COUNT;
         }
         if(currentQueue == tempCurrentQueue){
-            printf("Queues are empty\n");
+            //printf("Queues are empty\n");
             return;
         }
         //currentThread = 0;
@@ -144,7 +148,7 @@ void scheduler(){
 
     long quantumAllocation = FIRST_QUEUE_QUANTA - currentThread->timeSpent;
     if (quantumAllocation <= 0) {
-        printf("QA is 1000\n");
+        //printf("QA is 1000\n");
         quantumAllocation = 1000;
     }
     //printf("Q.A. for thread%d is %ld\n bcause timeSpnt is %ld\n",currentThread->id,quantumAllocation,currentThread->timeSpent);
@@ -199,7 +203,7 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
 int my_pthread_join(my_pthread_t * thread, void **value_ptr){
     while (1) {
         if(thread->isCleaned == 1){
-            printf("Ending threadid %d\n",thread->id);
+            //printf("Ending threadid %d\n",thread->id);
             return 0;
         }
         else{
@@ -219,7 +223,7 @@ void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2){
 }
 
 void scanSchedulerQueues(){
-    printf("Move all jobs to Topmost queue\n");
+    //printf("Move all jobs to Topmost queue\n");
     currentQueue = 0;
     struct Queue *primary = &queue[0];
     int i;
