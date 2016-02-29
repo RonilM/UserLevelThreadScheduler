@@ -4,7 +4,7 @@
 //
 //  Created by Ronil Mehta on 16/02/16.
 //  Copyright (c) 2016 Ronil Mehta. All rights reserved.
-//  Authors: Ronil Mehta (rvm41), Saurabh Deochake (srd117)
+//  Authors: Ronil Mehta (rvm41), Saurabh Deochake (srd117), Niraj Dholakia (nd387)
 //
 
 #ifndef my_pthread_t_my_pthread_t_h
