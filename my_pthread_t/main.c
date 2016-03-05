@@ -20,6 +20,8 @@
 #include <stdio.h>
 #include "my_pthread_t.h"
 #include <unistd.h>
+#include <sys/time.h>
+
 
 my_pthread_mutex_t mutex;
 
@@ -86,7 +88,9 @@ int main(int argc, const char * argv[]) {
     
     my_pthread_t thread1,thread2,thread3;
     init_threads();
-    
+    struct timeval end, start;
+    gettimeofday(&start, NULL);
+   
     /* Initialize the mutex variable.
      * This will reset the in-built count
      * variable to 0 making it available to threads.
@@ -108,9 +112,10 @@ int main(int argc, const char * argv[]) {
      * that we unlock it by internally calling the unlock.
      **/
     my_pthread_mutex_destroy(&mutex);
-    
+    gettimeofday(&end, NULL);
+    printf("Execution time %lu\n", end.tv_usec - start.tv_usec);
     printf("Ending main!\n");
-    
+
     return 0;
 }
 
