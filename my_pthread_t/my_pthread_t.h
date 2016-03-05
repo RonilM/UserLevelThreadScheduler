@@ -15,7 +15,7 @@
 
 #define MAX_THREAD_COUNT 10
 #define MAX_QUEUE_COUNT 3 
-#define FIRST_QUEUE_QUANTA 2000 //milliseconds
+#define FIRST_QUEUE_QUANTA 10 //milliseconds
 #define THREAD_STACK (1024*1024) //size of the stack
 #define THREAD_POOL_SATURATED_RETURN_VALUE 1
 #define MALLOC_ERROR 2
