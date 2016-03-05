@@ -44,6 +44,7 @@ static ucontext_t main_context;
 static int id = 1;
 static int cycle_counter = 1;
 static int firstFlag = 0;
+static int endThread = 0;
 
 void changeContext(int signum);
 void scheduler();
@@ -123,8 +124,8 @@ void my_pthread_yield(){
 void scheduler(){
     
     
-    if(currentThread!= 0 && currentThread->isFinished == 1){
-        
+    if((currentThread!= 0 && currentThread->isFinished == 1) || endThread == 1){
+        endThread = 0;
         //printf("Cleaning thread with id %d\n",currentThread->id);
         //Clean up the threads
         my_pthread_t *temp;
@@ -417,3 +418,12 @@ int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex){
     
     return(EXIT_SUCCESS);
 }
+
+
+
+void my_pthread_exit(void *value_ptr){
+    endThread = 1;
+    my_pthread_yield();
+
+}
+

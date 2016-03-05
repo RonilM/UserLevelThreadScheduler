@@ -71,7 +71,7 @@ void threadfunc3(){
         my_pthread_yield();
         sleep(0.1);
         printf("POST YIELD: ThreadFunc3\n");
-        
+        //my_pthread_exit(NULL);
     }
     //my_pthread_mutex_unlock(&mutex);
 }
