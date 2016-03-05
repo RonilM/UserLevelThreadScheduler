@@ -1,10 +1,16 @@
-//
-//  my_pthread_t.c
-//  my_pthread_t
-//
-//  Created by Ronil Mehta on 18/02/16.
-//  Copyright (c) 2016 Ronil Mehta. All rights reserved.
-//  Authors: Ronil Mehta (rvm41), Saurabh Deochake (srd117)
+/*
+*  my_pthread_t.c
+*  my_pthread_t
+*
+*  All the primitive functionalities of my_pthread_t
+*  library go here.
+*
+*  Created by Ronil Mehta on 18/02/16.
+*  Copyright (c) 2016 Ronil Mehta. All rights reserved.
+*  Authors: Ronil Mehta (rvm41),
+*           Saurabh Deochake (srd117),
+*           Niraj Dholakia (nd387)
+*/
 
 #ifdef __APPLE__
 #define _XOPEN_SOURCE
@@ -57,13 +63,27 @@ void init_threads()
     return;*/
 }
 
-
+/* Name:     thread_start
+ * Input:    Function to execute
+ * Output:   None
+ * Function: Call the function to execute, when done,
+ *           Update the state of the thread to finished
+ *           and give up the scheduler to others.
+ **/
 void thread_start(void (*t_func)(void)){
     t_func();
     currentThread->isFinished = 1;
     my_pthread_yield();
 }
 
+/* Name:     my_pthread_yield
+ * Input:    None
+ * Output:   None
+ * Function: Check the context of the thread, switch it
+ *           appropriately to check the scheduler queue
+ *           and remove first thread and give scheduler to
+ *           the next in the queue.
+ **/
 void my_pthread_yield(){
     long currentTimestamp = getCurrentTimestamp();
     setAlarm(0,0);
@@ -72,9 +92,11 @@ void my_pthread_yield(){
 
         currentThread->timeSpent = currentThread->timeSpent + currentTimestamp - currentThread->startTimestamp;
         
-        inMainThread = 1;
+        inMainThread = 1; //In main thread
+        // After we swap the context with main context,
+        // we leave the main thread context
         swapcontext(&currentThread->context, &main_context );
-        inMainThread = 0;
+        inMainThread = 0; //Outside main context
         
         return;
     }
@@ -91,13 +113,20 @@ void my_pthread_yield(){
     }
 }
 
-
+/* Name:     scheduler
+ * Input:    None
+ * Output:   None returned
+ * Function: Primitive Scheduler functions to move the threads
+ *           on the queue, check the queue, allocate quanta
+ *           on specific alarms change the context of threads.
+ **/
 void scheduler(){
     
     
     if(currentThread!= 0 && currentThread->isFinished == 1){
         
         //printf("Cleaning thread with id %d\n",currentThread->id);
+        //Clean up the threads
         my_pthread_t *temp;
         removeElementFromQueue(&queue[currentQueue],&temp);
         free(temp->stack);
@@ -152,39 +181,51 @@ void scheduler(){
         quantumAllocation = 1000;
     }
     //printf("Q.A. for thread%d is %ld\n bcause timeSpnt is %ld\n",currentThread->id,quantumAllocation,currentThread->timeSpent);
-    inMainThread = 0;
-    signal(SIGALRM, changeContext);
+    inMainThread = 0; 
+    signal(SIGALRM, changeContext); //Change context on SIGALRM
     currentThread->startTimestamp = getCurrentTimestamp();
     //alarm(quantumAllocation);
     setAlarm((int)(quantumAllocation/1000),quantumAllocation%1000);
     swapcontext(&main_context,&currentThread->context);
-    inMainThread = 1;
+    inMainThread = 1; //Come back to main thread
     
 }
 
+/* Name:     changeContext
+ * Input:    Signal number
+ * Output:   None returned
+ * Function: Swap the context with main thread
+ **/
 void changeContext(int signum){
     currentThread->timeSpent = FIRST_QUEUE_QUANTA;
     swapcontext(&currentThread->context,&main_context);
-
 }
 
+
+/* Name:     my_pthread_create
+ * Input:    pointer to thread structure and attributes values
+ * Output:   0 returned on success, Custom error if failure
+ * Function: Performing the important thread creation functions.
+ *           Create a context for created thread and return on success.
+ **/
 int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void), void * arg){
     //printf("start creation!\n");
     //if(nextQueueIndex == MAX_THREAD_COUNT) return THREAD_POOL_SATURATED_RETURN_VALUE;
-
+    // Set values to some thread state related stuff
     currentQueue = 0;
 
     thread->isFinished = 0;
     thread->isCleaned = 0;
     thread->startTimestamp = 0;
     thread->timeSpent = 0;
-    getcontext(&(thread->context));
+    getcontext(&(thread->context)); //fetch the context
     thread->context.uc_link = 0;
     thread->stack = malloc( THREAD_STACK );
     thread->context.uc_stack.ss_sp = thread->stack;
     thread->context.uc_stack.ss_size = THREAD_STACK;
     thread->context.uc_stack.ss_flags = 0;
     
+    //Check if we can allocate memory for stack
     if ( thread->stack == 0 )
     {
         printf( "Error: Could not allocate stack.\n" );
@@ -192,14 +233,21 @@ int my_pthread_create(my_pthread_t * thread, void * attr, void (*function)(void)
     }
     thread->id = id;
     id++;
-    addElementToQueue(thread, &queue[currentQueue]);
+    addElementToQueue(thread, &queue[currentQueue]); //add to scheduler
+    // Create a context for newly created thread                                                    
     makecontext( &thread->context, (void (*)(void)) &thread_start, 1, function );
     return 0;
 }
 
 
 
-
+/* Name:     my_pthread_join
+ * Input:    pointer to thread structure
+ * Output:   0 if already cleaned, None otherwise
+ * Function: Check if thread is already cleaned, if
+ *           yes then return 0, otherwise yeild to other
+ *           thread.
+ **/
 int my_pthread_join(my_pthread_t * thread, void **value_ptr){
     while (1) {
         if(thread->isCleaned == 1){
@@ -213,6 +261,13 @@ int my_pthread_join(my_pthread_t * thread, void **value_ptr){
     }
 }
 
+
+/* Name:     deepCopyThreads
+ * Input:    Pointers to two thread structs
+ * Output:   None returned
+ * Function: Copy all the thread attributes of one
+ *           thread into another thread.
+ **/
 void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2){
 
     t1->id = t2->id;
@@ -222,6 +277,12 @@ void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2){
     
 }
 
+/* Name:     scanSchedulerQueues
+ * Input:    None
+ * Output:   None returned
+ * Function: Traverse through the scheduler queue to
+ *           place an element at the back of the queue.
+ **/
 void scanSchedulerQueues(){
     //printf("Move all jobs to Topmost queue\n");
     currentQueue = 0;
@@ -237,6 +298,11 @@ void scanSchedulerQueues(){
 
 }
 
+/* Name:     getCurrentTimestamp
+ * Input:    None
+ * Output:   Current timestamp in the system
+ * Function: Calculate current timestamp and return it
+ **/
 long getCurrentTimestamp(){
 
     struct timespec spec;
@@ -257,6 +323,11 @@ long getCurrentTimestamp(){
 
 }
 
+/* Name:     setAlarm
+ * Input:    Seconds and microseconds values
+ * Output:   None returned, set timer for specified value
+ * Function: Set a timer for specified value passed to function
+ **/
 void setAlarm(int seconds,suseconds_t microseconds){
     
     
@@ -271,8 +342,6 @@ void setAlarm(int seconds,suseconds_t microseconds){
         tout_val.it_value.tv_usec = microseconds;
     //}
     setitimer(ITIMER_REAL, &tout_val,0);
-    
-    
 }
 
 /* Name: my_pthread_mutex_init

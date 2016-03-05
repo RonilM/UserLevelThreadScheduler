@@ -1,20 +1,25 @@
-//
-//  my_queue.h
-//  my_pthread_t
-//
-//  Created by Ronil Mehta on 22/02/16.
-//  Copyright (c) 2016 Ronil Mehta. All rights reserved.
-//
+/*
+*  my_queue.c
+*  my_pthread_t
+*
+*  All the primitive scheduler queue related structures
+*
+*  Created by Ronil Mehta on 22/02/16.
+*  Copyright (c) 2016 Ronil Mehta. All rights reserved.
+*  Authors: Ronil Mehta (rvm41),
+*           Saurabh Deochake (srd117),
+*           Niraj Dholakia (nd387)
+*/
 
 #ifndef my_pthread_t_my_queue_h
 #define my_pthread_t_my_queue_h
 
 #include "my_pthread_t.h"
 
+// Basic structure for queue
 struct Node {
     my_pthread_t *thread;
     struct Node *next;
-    
 };
 
 struct Queue {
@@ -22,10 +27,11 @@ struct Queue {
     struct Node *tail;
 };
 
+// Call to my_queue and my_pthread_t library to add element to the queue
 int addElementToQueue(my_pthread_t *thread,struct Queue *queue);
+
+// Call to my_queue and my_pthread_t library to remove element to the queue
 int removeElementFromQueue(struct Queue *queue,my_pthread_t **thread);
-
-
 
 
 /* 

@@ -1,25 +1,32 @@
-//
-//  my_pthread_t.h
-//  my_pthread_t
-//
-//  Created by Ronil Mehta on 16/02/16.
-//  Copyright (c) 2016 Ronil Mehta. All rights reserved.
-//  Authors: Ronil Mehta (rvm41), Saurabh Deochake (srd117), Niraj Dholakia (nd387)
-//
+/*
+*  my_pthread_t.h
+*  my_pthread_t
+*
+*  Created by Ronil Mehta on 16/02/16.
+*  Copyright (c) 2016 Ronil Mehta. All rights reserved.
+*  Authors: Ronil Mehta (rvm41),
+*           Saurabh Deochake (srd117),
+*           Niraj Dholakia (nd387)
+*/
 
 #ifndef my_pthread_t_my_pthread_t_h
 
 #define my_pthread_t_my_pthread_t_h
 
 #define MAX_THREAD_COUNT 10
-#define MAX_QUEUE_COUNT 3
+#define MAX_QUEUE_COUNT 3 
 #define FIRST_QUEUE_QUANTA 2000 //milliseconds
-#define THREAD_STACK (1024*1024)
+#define THREAD_STACK (1024*1024) //size of the stack
 #define THREAD_POOL_SATURATED_RETURN_VALUE 1
 #define MALLOC_ERROR 2
 #define SCAN_INTERVAL_COUNT 6
 
 #include <ucontext.h>
+
+/* Primitive thread structure which contains all
+ * primary information about a thread created using
+ * my_pthread_t library function.
+ * */
 
 typedef struct {
     int id;
@@ -63,13 +70,15 @@ extern int my_pthread_mutex_lock(my_pthread_mutex_t *mutex);
 //Call to my_pthread_t library to unlock the mutex variable
 extern int my_pthread_mutex_unlock(my_pthread_mutex_t *mutex);
 
-////Call to my_pthread_t library to free up the mutex variable
+//Call to my_pthread_t library to free up the mutex variable
 extern int my_pthread_mutex_destroy(my_pthread_mutex_t *mutex);
 
+//Call to my_pthread_t library to get a thread to execute 
 extern void thread_start(void (*t_func)(void));
 
 extern void init_threads();
 
+//Call to my_pthread_t library to copy attributes of a thread to others
 extern void deepCopyThreads(my_pthread_t *t1,my_pthread_t *t2);
 
 extern void scanSchedulerQueues();
